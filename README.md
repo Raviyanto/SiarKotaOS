@@ -44,6 +44,7 @@ Cukup jalankan perintah berikut pada terminal Debian Anda setelah instalasi mini
 
 
 📂 Struktur Proyek
+
 main.py: Backend Python yang mengontrol sistem dan jembatan Eel.
 
 web/: Folder berisi aset antarmuka (HTML, CSS, JS).
@@ -53,4 +54,5 @@ install.sh: Skrip otomatisasi setup sistem dan dependensi.
 apps/: Direktori tempat aplikasi tambahan dari App Store akan terpasang.
 
 🤝 Kontribusi
+
 Proyek ini bersifat open-source. Jika Anda ingin menambahkan fitur atau memperbaiki bug, silakan buat Pull Request atau ajukan Issue.
