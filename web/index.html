@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="id" translate="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SiarKotaOS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script type="text/javascript" src="/eel.js"></script>
+
+    <style>
+        /* --- KODE BARU: STYLING IKON DESKTOP --- */
+        /* Membuat ikon terlihat seperti aplikasi asli, bukan sekadar teks */
+        .desktop-item {
+            width: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 10px;
+        }
+
+        .desktop-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+        }
+
+        .icon-img-large {
+            font-size: 50px; /* Ukuran ikon diperbesar agar jelas */
+            margin-bottom: 8px;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+        }
+
+        .icon-text-clear {
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8); /* Agar teks terbaca jelas di wallpaper */
+            text-align: center;
+        }
+
+        /* --- KODE LAMA & PERBAIKAN: JENDELA EXPLORER --- */
+        .app-window {
+            position: absolute; top: 10%; left: 15%;
+            width: 70%; height: 65%;
+            background: rgba(30, 30, 30, 0.95);
+            border: 1px solid #444; border-radius: 8px;
+            color: white; z-index: 1000;
+            display: flex; flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .window-header {
+            background: #333; padding: 10px 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .window-body { padding: 10px; overflow-y: auto; flex-grow: 1; }
+        
+        .file-item {
+            display: flex; align-items: center; padding: 10px;
+            cursor: pointer; border-bottom: 1px solid #2a2a2a;
+            transition: background 0.2s;
+        }
+        .file-item:hover { background: #444; }
+        
+        .close-btn {
+            background: #ff5f56; border: none; color: white;
+            border-radius: 50%; width: 24px; height: 24px; 
+            cursor: pointer; font-weight: bold;
+        }
+
+        .folder-icon { color: #ffd700; margin-right: 12px; font-size: 1.2em; }
+        .file-icon { color: #ffffff; margin-right: 12px; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+    <div id="desktop">
+        <div class="desktop-item" onclick="openSiarExplorer()">
+            <div class="icon-img-large">📂</div>
+            <div class="icon-text-clear">Files</div>
+        </div>
+
+        <div class="widget">
+            <h3>System Monitor</h3>
+            <div class="stat-row">
+                <span>CPU:</span> <span id="cpu">--</span>
+            </div>
+            <div class="stat-row">
+                <span>RAM:</span> <span id="ram">--</span>
+            </div>
+            <hr style="border: 0; border-top: 1px solid #444; margin: 10px 0;">
+            <button class="btn-danger" onclick="eel.shutdown_pc()">Matikan OS</button>
+        </div>
+
+        <div id="explorer-window" class="app-window" style="display:none;">
+            <div class="window-header">
+                <span id="explorer-title">📁 SiarKota Explorer</span>
+                <button onclick="closeApp('explorer-window')" class="close-btn">×</button>
+            </div>
+            <div id="explorer-content" class="window-body">
+                </div>
+        </div>
+    </div>
+
+    <div id="taskbar">
+        <div class="start-btn">SiarKota</div>
+        <div id="clock">00:00:00</div>
+    </div>
+
+    <script>
+        /* KETERANGAN: Fungsi navigasi tetap dipertahankan namun dirapikan tampilannya */
+        async function openSiarExplorer(path = "/home/sartika") {
+            document.getElementById('explorer-window').style.display = 'flex';
+            document.getElementById('explorer-title').innerText = "📁 Explorer: " + path;
+
+            let files = await eel.get_file_list(path)();
+            let container = document.getElementById('explorer-content');
+            container.innerHTML = "";
+
+            if (files.error) {
+                container.innerHTML = "<p style='color:red; padding: 20px;'>Error: " + files.error + "</p>";
+                return;
+            }
+
+            // Menambahkan opsi "Kembali ke Atas" jika tidak di folder home
+            if (path !== "/home/sartika") {
+                let parentPath = path.substring(0, path.lastIndexOf('/')) || "/";
+                container.innerHTML += `
+                    <div class="file-item" onclick="openSiarExplorer('${parentPath}')">
+                        <span class="folder-icon">⬆️</span>
+                        <span style="flex: 1;">.. (Kembali)</span>
+                    </div>
+                `;
+            }
+
+            files.forEach(file => {
+                let icon = file.is_dir ? "📁" : "📄";
+                let iconClass = file.is_dir ? "folder-icon" : "file-icon";
+                let clickAction = file.is_dir ? `onclick="openSiarExplorer('${file.path}')"` : "";
+
+                container.innerHTML += `
+                    <div class="file-item" ${clickAction}>
+                        <span class="${iconClass}">${icon}</span>
+                        <span style="flex: 1;">${file.name}</span>
+                        <span style="color: #777; font-size: 0.8em;">${file.size}</span>
+                    </div>
+                `;
+            });
+        }
+
+        function closeApp(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+    </script>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
