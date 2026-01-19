@@ -4,118 +4,164 @@
     <meta charset="UTF-8">
     <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SiarKotaOS</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>SiarKotaOS - Hacker Edition</title>
     <script type="text/javascript" src="/eel.js"></script>
 
     <style>
-        /* --- DESKTOP & ICONS --- */
-        .desktop-item {
-            width: 100px; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.2s ease;
-            padding: 10px; border-radius: 10px;
-            margin: 10px; float: left; position: relative;
+        /* --- THEME HACKER (MATRIX) --- */
+        :root {
+            --hacker-green: #00ff41;
+            --dark-bg: #0d0208;
+            --window-border: #008f11;
         }
-        .desktop-item:hover { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); }
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background-color: var(--dark-bg);
+            color: var(--hacker-green);
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+        }
+
+        /* --- CANVAS MATRIX RAIN --- */
+        #matrix-canvas {
+            position: fixed; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: -1; opacity: 0.4;
+        }
+
+        /* --- DESKTOP & ICONS (REVISI VISUAL) --- */
+        #desktop { width: 100vw; height: 100vh; position: relative; }
+
+        .desktop-item {
+            width: 110px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s ease;
+            padding: 15px; border-radius: 8px;
+            margin: 15px; float: left; position: relative;
+            border: 1px solid transparent;
+        }
+        .desktop-item:hover { 
+            background: rgba(0, 255, 65, 0.1); 
+            border: 1px solid var(--hacker-green);
+            box-shadow: 0 0 15px var(--hacker-green);
+        }
         .icon-img-large {
-            font-size: 50px; margin-bottom: 8px;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
-            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+            font-size: 55px; margin-bottom: 8px;
+            text-shadow: 0 0 10px var(--hacker-green);
         }
         .delete-btn {
             position: absolute; top: 5px; right: 5px;
-            background: #ff5f56; color: white; border: none;
+            background: #ff3333; color: white; border: none;
             border-radius: 50%; width: 22px; height: 22px;
             font-size: 12px; cursor: pointer; display: none;
             z-index: 10; font-weight: bold;
         }
         .desktop-item:hover .delete-btn { display: block; }
         .icon-text-clear {
-            color: white; font-size: 13px; font-weight: 500;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8); text-align: center;
+            color: var(--hacker-green); font-size: 13px; font-weight: bold;
+            text-transform: uppercase; text-align: center;
         }
 
-        /* --- WINDOW SYSTEM --- */
+        /* --- WINDOW SYSTEM (TETAP STABIL) --- */
         .app-window {
             position: absolute; top: 10%; left: 15%;
             width: 70%; height: 65%;
-            background: rgba(30, 30, 30, 0.95);
-            border: 1px solid #444; border-radius: 8px;
-            color: white; z-index: 1000;
+            background: rgba(0, 15, 0, 0.95);
+            border: 2px solid var(--hacker-green); border-radius: 5px;
+            color: var(--hacker-green); z-index: 1000;
             display: none; flex-direction: column;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 0 30px rgba(0,255,65,0.3);
         }
         .window-header {
-            background: #333; padding: 10px 15px;
+            background: var(--hacker-green); color: black; padding: 10px 15px;
             display: flex; justify-content: space-between; align-items: center;
-            border-radius: 8px 8px 0 0;
+            font-weight: bold;
         }
         .window-body { padding: 15px; overflow-y: auto; flex-grow: 1; }
         .close-btn {
-            background: #ff5f56; border: none; color: white;
-            border-radius: 50%; width: 24px; height: 24px;
-            cursor: pointer; font-weight: bold;
+            background: black; border: 1px solid black; color: white;
+            padding: 2px 10px; cursor: pointer; font-weight: bold;
         }
-        #app-iframe { width: 100%; height: 100%; border: none; background: white; }
 
-        /* --- EXPLORER & STORE UI --- */
-        .file-item {
-            display: flex; align-items: center; padding: 10px;
-            cursor: pointer; border-bottom: 1px solid #333;
+        /* --- SYSTEM MONITOR & BUTTONS --- */
+        .widget {
+            position: absolute; bottom: 70px; right: 20px;
+            background: rgba(0, 20, 0, 0.9); padding: 20px;
+            border: 1px solid var(--hacker-green); border-radius: 5px;
+            min-width: 180px; color: var(--hacker-green);
+            box-shadow: 0 0 15px rgba(0,255,65,0.2);
         }
-        .file-item:hover { background: rgba(255,255,255,0.1); }
-        .store-input {
-            width: 80%; padding: 12px; background: #222; 
-            border: 1px solid #555; color: white; border-radius: 5px;
+        .btn-action {
+            width: 100%; border: 1px solid var(--hacker-green);
+            background: transparent; color: var(--hacker-green);
+            padding: 8px; margin-top: 8px; cursor: pointer;
+            font-family: 'Courier New', monospace; font-weight: bold;
+            text-transform: uppercase;
         }
-        .btn-install {
-            background: #28a745; color: white; border: none;
-            padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px;
+        .btn-action:hover { background: var(--hacker-green); color: black; }
+        .btn-reboot { border-color: #ffaa00; color: #ffaa00; }
+        .btn-reboot:hover { background: #ffaa00; color: black; }
+
+        /* --- TASKBAR --- */
+        #taskbar {
+            position: fixed; bottom: 0; width: 100%; height: 40px;
+            background: black; border-top: 2px solid var(--hacker-green);
+            display: flex; align-items: center; padding: 0 20px; box-sizing: border-box;
         }
+        .start-btn { font-weight: bold; color: var(--hacker-green); }
+        #clock { margin-left: auto; color: var(--hacker-green); font-weight: bold; }
+        
+        iframe { width: 100%; height: 100%; border: none; background: white; }
     </style>
 </head>
 <body>
 
+<canvas id="matrix-canvas"></canvas>
+
 <div id="desktop">
+    <h1 style="text-align: center; letter-spacing: 10px; margin-top: 20px; text-shadow: 0 0 15px var(--hacker-green);">SIAR KOTA OS</h1>
+
     <div class="desktop-item" onclick="openSiarExplorer('/home/sartika')">
-        <div class="icon-img-large">📂</div>
-        <div class="icon-text-clear">Files</div>
+        <div class="icon-img-large">💾</div>
+        <div class="icon-text-clear">Root_Files</div>
     </div>
 
     <div class="desktop-item" onclick="openAppStore()">
-        <div class="icon-img-large">🛒</div>
-        <div class="icon-text-clear">App Store</div>
+        <div class="icon-img-large">🛰️</div>
+        <div class="icon-text-clear">Node_Store</div>
     </div>
 
     <div id="installed-apps-container"></div>
 
-    <div class="widget" style="position: absolute; bottom: 80px; right: 20px; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 10px; min-width: 160px; color: white;">
-        <h4 style="margin:0 0 10px 0; color: #00d1ff;">System Monitor</h4>
+    <div class="widget">
+        <h4 style="margin:0 0 10px 0; border-bottom: 1px solid var(--hacker-green);">SYS_STATUS</h4>
         <div>CPU: <span id="cpu">--</span></div>
         <div>RAM: <span id="ram">--</span></div>
-        <hr style="border:0; border-top:1px solid #555; margin:10px 0;">
-        <button onclick="eel.shutdown_pc()" style="width:100%; background:#ff5f56; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer;">Matikan OS</button>
+        <hr style="border:0; border-top:1px solid var(--hacker-green); margin:10px 0;">
+        <button class="btn-action" onclick="eel.shutdown_pc()">TERMINATE_OS</button>
+        <button class="btn-action btn-reboot" onclick="eel.reboot_pc()">REBOOT_SYS</button>
     </div>
 
     <div id="explorer-window" class="app-window">
         <div class="window-header">
             <span id="explorer-title">📁 Explorer</span>
-            <button onclick="closeApp('explorer-window')" class="close-btn">×</button>
+            <button onclick="closeApp('explorer-window')" class="close-btn">X</button>
         </div>
         <div id="explorer-content" class="window-body"></div>
     </div>
 
     <div id="store-window" class="app-window">
         <div class="window-header">
-            <span>🛒 App Store</span>
-            <button onclick="closeApp('store-window')" class="close-btn">×</button>
+            <span>🛒 App_Store</span>
+            <button onclick="closeApp('store-window')" class="close-btn">X</button>
         </div>
         <div class="window-body" style="text-align:center;">
-            <h3>Pasang Aplikasi dari GitHub</h3>
-            <input type="text" id="app-url" class="store-input" placeholder="https://github.com/user/repo">
+            <h3>Download App from Git</h3>
+            <input type="text" id="app-url" class="store-input" style="background:black; color:var(--hacker-green); border:1px solid var(--hacker-green);" placeholder="https://github.com/user/repo">
             <br>
-            <button class="btn-install" onclick="installNewApp()">Pasang Sekarang</button>
+            <button class="btn-action" style="width: 50%;" onclick="installNewApp()">EXECUTE_INSTALL</button>
             <div id="install-status" style="margin-top:15px;"></div>
         </div>
     </div>
@@ -123,19 +169,43 @@
     <div id="app-runner-window" class="app-window" style="width:85%; height:80%; left:7.5%;">
         <div class="window-header">
             <span id="app-runner-title">Aplikasi</span>
-            <button onclick="closeApp('app-runner-window')" class="close-btn">×</button>
+            <button onclick="closeApp('app-runner-window')" class="close-btn">X</button>
         </div>
         <iframe id="app-iframe"></iframe>
     </div>
 </div>
 
 <div id="taskbar">
-    <div class="start-btn">SiarKota</div>
+    <div class="start-btn">SIAR_KOTA_OS_v2</div>
     <div id="clock">00:00:00</div>
 </div>
 
 <script>
-    /* --- NAVIGASI JENDELA --- */
+    /* --- LOGIKA MATRIX RAIN --- */
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*";
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function drawMatrix() {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#00ff41";
+        ctx.font = fontSize + "px monospace";
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars[Math.floor(Math.random() * chars.length)];
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        }
+    }
+    setInterval(drawMatrix, 50);
+
+    /* --- LOGIKA LAMA YANG DI-MAINTAIN (TETAP SAMA) --- */
     function openAppStore() {
         document.getElementById('store-window').style.display = 'flex';
         document.getElementById('install-status').innerText = "";
@@ -146,16 +216,13 @@
         if (id === 'app-runner-window') document.getElementById('app-iframe').src = "";
     }
 
-    /* --- FILE EXPLORER (DENGAN TOMBOL KEMBALI) --- */
     async function openSiarExplorer(path = "/home/sartika") {
         document.getElementById('explorer-window').style.display = 'flex';
         document.getElementById('explorer-title').innerText = "📁 " + path;
-        
         let result = await eel.get_file_list(path)();
         let container = document.getElementById('explorer-content');
         container.innerHTML = "";
 
-        // Tombol Kembali (Up Directory)
         if (path !== "/" && path !== "") {
             let parts = path.split('/').filter(Boolean);
             parts.pop();
@@ -169,16 +236,14 @@
         result.forEach(file => {
             let icon = file.is_dir ? "📁" : "📄";
             let action = file.is_dir ? `onclick="openSiarExplorer('${file.path}')"` : "";
-            container.innerHTML += `
-                <div class="file-item" ${action}>
-                    <span style="margin-right:10px;">${icon}</span>
-                    <span style="flex:1;">${file.name}</span>
-                    <span style="color:#777; font-size:11px;">${file.size}</span>
-                </div>`;
+            container.innerHTML += `<div class="file-item" ${action}>
+                <span style="margin-right:10px;">${icon}</span>
+                <span style="flex:1;">${file.name}</span>
+                <span style="color:var(--hacker-green); font-size: 11px; opacity:0.6;">${file.size}</span>
+            </div>`;
         });
     }
 
-    /* --- MANAJEMEN APLIKASI --- */
     async function loadDesktopApps() {
         const apps = await eel.get_installed_apps()();
         const container = document.getElementById('installed-apps-container');
@@ -188,7 +253,7 @@
                 <div class="desktop-item">
                     <button class="delete-btn" onclick="event.stopPropagation(); requestUninstall('${app.id}', '${app.name}')">×</button>
                     <div onclick="launchApp('${app.path}', '${app.name}')">
-                        <div class="icon-img-large">📦</div>
+                        <div class="icon-img-large">📟</div>
                         <div class="icon-text-clear">${app.name}</div>
                     </div>
                 </div>`;
@@ -199,18 +264,18 @@
         const url = document.getElementById('app-url').value;
         const status = document.getElementById('install-status');
         if (!url) return;
-        status.innerText = "⏳ Sedang memasang...";
+        status.innerText = "⏳ EXECUTING_CLONE...";
         let res = await eel.install_app(url)();
         if (res.status === "success") {
-            status.innerText = "✅ Berhasil!";
+            status.innerText = "✅ SUCCESS!";
             loadDesktopApps();
         } else {
-            status.innerText = "❌ " + res.message;
+            status.innerText = "❌ FAILED: " + res.message;
         }
     }
 
     async function requestUninstall(id, name) {
-        if (confirm(`Hapus ${name}?`)) {
+        if (confirm(`TERMINATE ${name}?`)) {
             await eel.uninstall_app(id)();
             loadDesktopApps();
         }
@@ -222,14 +287,10 @@
         document.getElementById('app-iframe').src = path;
     }
 
-    /* --- WIDGET & CLOCK --- */
     setInterval(async () => {
         let stats = await eel.get_sys_info()();
         document.getElementById('cpu').innerText = stats.cpu;
         document.getElementById('ram').innerText = stats.ram;
-    }, 3000);
-
-    setInterval(() => {
         document.getElementById('clock').innerText = new Date().toLocaleTimeString('id-ID');
     }, 1000);
 

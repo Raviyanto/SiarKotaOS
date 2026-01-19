@@ -117,6 +117,14 @@ def shutdown_pc():
     time.sleep(1)
     os.system("sudo /usr/bin/systemctl poweroff")
 
+# --- TAMBAHAN BARU: FUNGSI REBOOT ---
+@eel.expose
+def reboot_pc():
+    print("Memulai ulang sistem via UI...")
+    os.system("pkill -f chromium")
+    time.sleep(1)
+    os.system("sudo /usr/bin/systemctl reboot")
+
 # --- 5. KONFIGURASI BROWSER ---
 WIDTH, HEIGHT = 1366, 768
 browser_options = [
