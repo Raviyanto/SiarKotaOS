@@ -42,6 +42,11 @@ Cukup jalankan perintah berikut pada terminal Debian Anda setelah instalasi mini
 
 3. Reboot: Setelah selesai, silakan nyalakan ulang sistem Anda. SiarKotaOS akan otomatis terbuka.
 
+## Cara Silent Boot & Splash Screen
+1. Edit /etc/default/grub: GRUB_TIMEOUT=0, quiet splash.
+2. Ganti logo di /usr/share/plymouth/themes/spinner/watermark.png.
+3. Jalankan sudo update-grub && sudo update-initramfs -u.
+
 
 📂 Struktur Proyek
 
