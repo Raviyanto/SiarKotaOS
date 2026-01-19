@@ -41,6 +41,8 @@ Cukup jalankan perintah berikut pada terminal Debian Anda setelah instalasi mini
     ```
 
 3. Reboot: Setelah selesai, silakan nyalakan ulang sistem Anda. SiarKotaOS akan otomatis terbuka.
+
+
 📂 Struktur Proyek
 main.py: Backend Python yang mengontrol sistem dan jembatan Eel.
 
