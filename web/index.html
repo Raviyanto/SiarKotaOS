@@ -9,236 +9,232 @@
     <script type="text/javascript" src="/eel.js"></script>
 
     <style>
-        /* --- STYLING IKON DESKTOP --- */
+        /* --- DESKTOP & ICONS --- */
         .desktop-item {
-            width: 100px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            padding: 10px;
-            border-radius: 10px;
-            margin: 10px;
-            float: left;
+            width: 100px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s ease;
+            padding: 10px; border-radius: 10px;
+            margin: 10px; float: left; position: relative;
         }
-
-        .desktop-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(5px);
-        }
-
+        .desktop-item:hover { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); }
         .icon-img-large {
-            font-size: 50px;
-            margin-bottom: 8px;
+            font-size: 50px; margin-bottom: 8px;
             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
         }
-
+        .delete-btn {
+            position: absolute; top: 5px; right: 5px;
+            background: #ff5f56; color: white; border: none;
+            border-radius: 50%; width: 22px; height: 22px;
+            font-size: 12px; cursor: pointer; display: none;
+            z-index: 10; font-weight: bold;
+        }
+        .desktop-item:hover .delete-btn { display: block; }
         .icon-text-clear {
-            color: white;
-            font-size: 14px;
-            font-weight: 500;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            text-align: center;
-            word-break: break-word;
+            color: white; font-size: 13px; font-weight: 500;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8); text-align: center;
         }
 
-        /* --- JENDELA APLIKASI --- */
+        /* --- WINDOW SYSTEM --- */
         .app-window {
             position: absolute; top: 10%; left: 15%;
             width: 70%; height: 65%;
             background: rgba(30, 30, 30, 0.95);
             border: 1px solid #444; border-radius: 8px;
             color: white; z-index: 1000;
-            display: flex; flex-direction: column;
+            display: none; flex-direction: column;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-
-        /* Ukuran Khusus App Runner (Aplikasi yang dibuka) */
-        #app-runner-window {
-            width: 85%; height: 80%; left: 7.5%; top: 5%;
-        }
-
         .window-header {
             background: #333; padding: 10px 15px;
             display: flex; justify-content: space-between; align-items: center;
             border-radius: 8px 8px 0 0;
         }
-
-        .window-body { padding: 15px; overflow-y: auto; flex-grow: 1; position: relative; }
-
+        .window-body { padding: 15px; overflow-y: auto; flex-grow: 1; }
         .close-btn {
             background: #ff5f56; border: none; color: white;
             border-radius: 50%; width: 24px; height: 24px;
             cursor: pointer; font-weight: bold;
         }
+        #app-iframe { width: 100%; height: 100%; border: none; background: white; }
 
-        /* --- STYLING KHUSUS APP STORE --- */
+        /* --- EXPLORER & STORE UI --- */
+        .file-item {
+            display: flex; align-items: center; padding: 10px;
+            cursor: pointer; border-bottom: 1px solid #333;
+        }
+        .file-item:hover { background: rgba(255,255,255,0.1); }
         .store-input {
-            width: 90%; padding: 12px; margin: 10px 0;
-            background: #222; border: 1px solid #555;
-            color: white; border-radius: 5px; font-size: 14px;
+            width: 80%; padding: 12px; background: #222; 
+            border: 1px solid #555; color: white; border-radius: 5px;
         }
         .btn-install {
             background: #28a745; color: white; border: none;
-            padding: 10px 25px; border-radius: 5px; cursor: pointer;
-            font-weight: bold; transition: 0.3s;
-        }
-        #install-status { margin-top: 15px; font-weight: 500; }
-
-        /* Iframe untuk menjalankan aplikasi */
-        #app-iframe {
-            width: 100%; height: 100%; border: none; background: white; border-radius: 0 0 8px 8px;
+            padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <div id="desktop">
-        <div class="desktop-item" onclick="openSiarExplorer()">
-            <div class="icon-img-large">📂</div>
-            <div class="icon-text-clear">Files</div>
+
+<div id="desktop">
+    <div class="desktop-item" onclick="openSiarExplorer('/home/sartika')">
+        <div class="icon-img-large">📂</div>
+        <div class="icon-text-clear">Files</div>
+    </div>
+
+    <div class="desktop-item" onclick="openAppStore()">
+        <div class="icon-img-large">🛒</div>
+        <div class="icon-text-clear">App Store</div>
+    </div>
+
+    <div id="installed-apps-container"></div>
+
+    <div class="widget" style="position: absolute; bottom: 80px; right: 20px; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 10px; min-width: 160px; color: white;">
+        <h4 style="margin:0 0 10px 0; color: #00d1ff;">System Monitor</h4>
+        <div>CPU: <span id="cpu">--</span></div>
+        <div>RAM: <span id="ram">--</span></div>
+        <hr style="border:0; border-top:1px solid #555; margin:10px 0;">
+        <button onclick="eel.shutdown_pc()" style="width:100%; background:#ff5f56; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer;">Matikan OS</button>
+    </div>
+
+    <div id="explorer-window" class="app-window">
+        <div class="window-header">
+            <span id="explorer-title">📁 Explorer</span>
+            <button onclick="closeApp('explorer-window')" class="close-btn">×</button>
         </div>
+        <div id="explorer-content" class="window-body"></div>
+    </div>
 
-        <div class="desktop-item" onclick="openAppStore()">
-            <div class="icon-img-large">🛒</div>
-            <div class="icon-text-clear">App Store</div>
+    <div id="store-window" class="app-window">
+        <div class="window-header">
+            <span>🛒 App Store</span>
+            <button onclick="closeApp('store-window')" class="close-btn">×</button>
         </div>
-
-        <div id="installed-apps-container"></div>
-
-        <div class="widget" style="clear: both; position: absolute; bottom: 80px; right: 20px;">
-            <h3>System Monitor</h3>
-            <div class="stat-row">CPU: <span id="cpu">--</span></div>
-            <div class="stat-row">RAM: <span id="ram">--</span></div>
-            <hr style="border: 0; border-top: 1px solid #444; margin: 10px 0;">
-            <button class="btn-danger" onclick="eel.shutdown_pc()">Matikan OS</button>
-        </div>
-
-        <div id="explorer-window" class="app-window" style="display:none;">
-            <div class="window-header">
-                <span id="explorer-title">📁 SiarKota Explorer</span>
-                <button onclick="closeApp('explorer-window')" class="close-btn">×</button>
-            </div>
-            <div id="explorer-content" class="window-body"></div>
-        </div>
-
-        <div id="store-window" class="app-window" style="display:none;">
-            <div class="window-header">
-                <span>🛒 SiarKota App Store</span>
-                <button onclick="closeApp('store-window')" class="close-btn">×</button>
-            </div>
-            <div class="window-body" style="text-align: center;">
-                <h4>Pasang Aplikasi dari GitHub</h4>
-                <input type="text" id="app-url" class="store-input" placeholder="https://github.com/User/app">
-                <br>
-                <button class="btn-install" onclick="installNewApp()">Pasang Sekarang</button>
-                <div id="install-status"></div>
-            </div>
-        </div>
-
-        <div id="app-runner-window" class="app-window" style="display:none;">
-            <div class="window-header">
-                <span id="app-runner-title">Aplikasi</span>
-                <button onclick="closeApp('app-runner-window')" class="close-btn">×</button>
-            </div>
-            <iframe id="app-iframe"></iframe>
+        <div class="window-body" style="text-align:center;">
+            <h3>Pasang Aplikasi dari GitHub</h3>
+            <input type="text" id="app-url" class="store-input" placeholder="https://github.com/user/repo">
+            <br>
+            <button class="btn-install" onclick="installNewApp()">Pasang Sekarang</button>
+            <div id="install-status" style="margin-top:15px;"></div>
         </div>
     </div>
 
-    <div id="taskbar">
-        <div class="start-btn">SiarKota</div>
-        <div id="clock">00:00:00</div>
+    <div id="app-runner-window" class="app-window" style="width:85%; height:80%; left:7.5%;">
+        <div class="window-header">
+            <span id="app-runner-title">Aplikasi</span>
+            <button onclick="closeApp('app-runner-window')" class="close-btn">×</button>
+        </div>
+        <iframe id="app-iframe"></iframe>
     </div>
+</div>
 
-    <script>
-        /* --- FUNGSI MENGAMBIL DAFTAR APLIKASI --- */
-        async function loadDesktopApps() {
-            const apps = await eel.get_installed_apps()();
-            const container = document.getElementById('installed-apps-container');
-            container.innerHTML = ""; 
+<div id="taskbar">
+    <div class="start-btn">SiarKota</div>
+    <div id="clock">00:00:00</div>
+</div>
 
-            apps.forEach(app => {
-                container.innerHTML += `
-                    <div class="desktop-item" onclick="launchApp('${app.path}', '${app.name}')">
-                        <div class="icon-img-large">${app.icon || '📦'}</div>
+<script>
+    /* --- NAVIGASI JENDELA --- */
+    function openAppStore() {
+        document.getElementById('store-window').style.display = 'flex';
+        document.getElementById('install-status').innerText = "";
+    }
+
+    function closeApp(id) {
+        document.getElementById(id).style.display = 'none';
+        if (id === 'app-runner-window') document.getElementById('app-iframe').src = "";
+    }
+
+    /* --- FILE EXPLORER (DENGAN TOMBOL KEMBALI) --- */
+    async function openSiarExplorer(path = "/home/sartika") {
+        document.getElementById('explorer-window').style.display = 'flex';
+        document.getElementById('explorer-title').innerText = "📁 " + path;
+        
+        let result = await eel.get_file_list(path)();
+        let container = document.getElementById('explorer-content');
+        container.innerHTML = "";
+
+        // Tombol Kembali (Up Directory)
+        if (path !== "/" && path !== "") {
+            let parts = path.split('/').filter(Boolean);
+            parts.pop();
+            let parentPath = "/" + parts.join('/');
+            container.innerHTML += `
+                <div class="file-item" onclick="openSiarExplorer('${parentPath}')" style="color: #00d1ff; font-weight: bold;">
+                    <span>⬆️ .. (Kembali)</span>
+                </div>`;
+        }
+
+        result.forEach(file => {
+            let icon = file.is_dir ? "📁" : "📄";
+            let action = file.is_dir ? `onclick="openSiarExplorer('${file.path}')"` : "";
+            container.innerHTML += `
+                <div class="file-item" ${action}>
+                    <span style="margin-right:10px;">${icon}</span>
+                    <span style="flex:1;">${file.name}</span>
+                    <span style="color:#777; font-size:11px;">${file.size}</span>
+                </div>`;
+        });
+    }
+
+    /* --- MANAJEMEN APLIKASI --- */
+    async function loadDesktopApps() {
+        const apps = await eel.get_installed_apps()();
+        const container = document.getElementById('installed-apps-container');
+        container.innerHTML = "";
+        apps.forEach(app => {
+            container.innerHTML += `
+                <div class="desktop-item">
+                    <button class="delete-btn" onclick="event.stopPropagation(); requestUninstall('${app.id}', '${app.name}')">×</button>
+                    <div onclick="launchApp('${app.path}', '${app.name}')">
+                        <div class="icon-img-large">📦</div>
                         <div class="icon-text-clear">${app.name}</div>
                     </div>
-                `;
-            });
+                </div>`;
+        });
+    }
+
+    async function installNewApp() {
+        const url = document.getElementById('app-url').value;
+        const status = document.getElementById('install-status');
+        if (!url) return;
+        status.innerText = "⏳ Sedang memasang...";
+        let res = await eel.install_app(url)();
+        if (res.status === "success") {
+            status.innerText = "✅ Berhasil!";
+            loadDesktopApps();
+        } else {
+            status.innerText = "❌ " + res.message;
         }
+    }
 
-        /* --- MENJALANKAN APLIKASI --- */
-        function launchApp(path, name) {
-            document.getElementById('app-runner-window').style.display = 'flex';
-            document.getElementById('app-runner-title').innerText = name;
-            document.getElementById('app-iframe').src = path;
+    async function requestUninstall(id, name) {
+        if (confirm(`Hapus ${name}?`)) {
+            await eel.uninstall_app(id)();
+            loadDesktopApps();
         }
+    }
 
-        /* --- FUNGSI EXPLORER --- */
-        async function openSiarExplorer(path = "/home/sartika") {
-            document.getElementById('explorer-window').style.display = 'flex';
-            document.getElementById('explorer-title').innerText = "📁 Explorer: " + path;
-            let files = await eel.get_file_list(path)();
-            let container = document.getElementById('explorer-content');
-            container.innerHTML = "";
+    function launchApp(path, name) {
+        document.getElementById('app-runner-window').style.display = 'flex';
+        document.getElementById('app-runner-title').innerText = name;
+        document.getElementById('app-iframe').src = path;
+    }
 
-            if (files.error) {
-                container.innerHTML = `<p style="color:red;">Error: ${files.error}</p>`;
-                return;
-            }
+    /* --- WIDGET & CLOCK --- */
+    setInterval(async () => {
+        let stats = await eel.get_sys_info()();
+        document.getElementById('cpu').innerText = stats.cpu;
+        document.getElementById('ram').innerText = stats.ram;
+    }, 3000);
 
-            if (path !== "/home/sartika") {
-                let parentPath = path.substring(0, path.lastIndexOf('/')) || "/";
-                container.innerHTML += `<div class="file-item" onclick="openSiarExplorer('${parentPath}')">⬆️ .. Kembali</div>`;
-            }
+    setInterval(() => {
+        document.getElementById('clock').innerText = new Date().toLocaleTimeString('id-ID');
+    }, 1000);
 
-            files.forEach(file => {
-                let icon = file.is_dir ? "📁" : "📄";
-                let clickAction = file.is_dir ? `onclick="openSiarExplorer('${file.path}')"` : "";
-                container.innerHTML += `
-                    <div class="file-item" ${clickAction}>
-                        <span style="margin-right:10px;">${icon}</span>
-                        <span style="flex: 1;">${file.name}</span>
-                        <span style="color: #777;">${file.size}</span>
-                    </div>`;
-            });
-        }
+    window.onload = loadDesktopApps;
+</script>
 
-        /* --- FUNGSI APP STORE --- */
-        function openAppStore() {
-            document.getElementById('store-window').style.display = 'flex';
-        }
-
-        async function installNewApp() {
-            const url = document.getElementById('app-url').value;
-            const statusDiv = document.getElementById('install-status');
-            if (!url) return;
-
-            statusDiv.innerText = "⏳ Memasang...";
-            statusDiv.style.color = "#007bff";
-
-            let result = await eel.install_app(url)();
-
-            if (result.status === "success") {
-                statusDiv.innerText = "✅ " + result.message;
-                statusDiv.style.color = "#28a745";
-                document.getElementById('app-url').value = "";
-                loadDesktopApps(); // Refresh ikon desktop
-            } else {
-                statusDiv.innerText = "❌ Gagal: " + result.message;
-                statusDiv.style.color = "#ff5f56";
-            }
-        }
-
-        function closeApp(id) {
-            document.getElementById(id).style.display = 'none';
-            if (id === 'app-runner-window') document.getElementById('app-iframe').src = "";
-        }
-
-        // Jalankan saat startup
-        window.onload = loadDesktopApps;
-    </script>
-    <script src="js/main.js"></script>
 </body>
 </html>

@@ -5,15 +5,36 @@ import platform
 import shutil
 import subprocess
 import json
+import time
 
 # --- 1. INISIALISASI PATH ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 WEB_DIR = os.path.join(BASE_DIR, 'web')
 APPS_DIR = os.path.join(BASE_DIR, 'apps')
+# Path symlink di dalam folder web
+SYMLINK_PATH = os.path.join(WEB_DIR, 'apps')
 
-# Memastikan folder apps tersedia
+# Memastikan folder apps utama tersedia
 if not os.path.exists(APPS_DIR):
     os.makedirs(APPS_DIR)
+
+# --- FUNGSI OTOMATIS SYMLINK ---
+def setup_symlink():
+    """Membuat 'pintu ajaib' dari web/apps ke folder apps utama"""
+    try:
+        # Jika sudah ada folder/file di web/apps tapi bukan symlink, hapus dulu
+        if os.path.exists(SYMLINK_PATH) and not os.path.islink(SYMLINK_PATH):
+            if os.path.isdir(SYMLINK_PATH):
+                shutil.rmtree(SYMLINK_PATH)
+            else:
+                os.remove(SYMLINK_PATH)
+        
+        # Buat symlink jika belum ada
+        if not os.path.exists(SYMLINK_PATH):
+            os.symlink(APPS_DIR, SYMLINK_PATH)
+            print("✅ Symlink berhasil dibuat: web/apps -> apps")
+    except Exception as e:
+        print(f"❌ Gagal membuat symlink: {e}")
 
 eel.init(WEB_DIR)
 
@@ -35,11 +56,9 @@ def get_file_list(current_path="/home/sartika"):
     except Exception as e:
         return {"error": str(e)}
 
-# --- 3. FUNGSI PACKAGE MANAGER & AUTO-DETECTION ---
-
+# --- 3. FUNGSI PACKAGE MANAGER ---
 @eel.expose
 def get_installed_apps():
-    """Memindai folder apps dan mengambil daftar aplikasi untuk ikon Desktop"""
     apps = []
     if os.path.exists(APPS_DIR):
         for app_folder in os.listdir(APPS_DIR):
@@ -48,9 +67,9 @@ def get_installed_apps():
                 try:
                     with open(manifest_path, 'r') as f:
                         data = json.load(f)
-                        # Menambahkan path entry point relatif terhadap folder web
-                        # Karena index.html ada di /web, maka apps ada di ../apps/
-                        data['path'] = f"../apps/{app_folder}/{data['entry']}"
+                        data['id'] = app_folder
+                        # Menggunakan path melalui symlink (apps/...) bukan (../apps/...)
+                        data['path'] = f"apps/{app_folder}/{data['entry']}"
                         apps.append(data)
                 except:
                     continue
@@ -58,24 +77,15 @@ def get_installed_apps():
 
 @eel.expose
 def install_app(repo_url):
-    """Mengunduh aplikasi dari GitHub dan mengekstraknya ke folder apps"""
     try:
-        # Mengambil nama repo sebagai ID aplikasi
         app_id = repo_url.strip("/").split('/')[-1].replace('.git', '')
         target_path = os.path.join(APPS_DIR, app_id)
-
         if os.path.exists(target_path):
             return {"status": "error", "message": "Aplikasi sudah terpasang!"}
-
-        # Melakukan git clone
+        
         result = subprocess.run(['git', 'clone', '--depth', '1', repo_url, target_path], 
                                 capture_output=True, text=True)
-        
-        if result.returncode == 0:
-            return {"status": "success", "message": f"Berhasil memasang {app_id}"}
-        else:
-            return {"status": "error", "message": result.stderr}
-
+        return {"status": "success"} if result.returncode == 0 else {"status": "error", "message": result.stderr}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -85,40 +95,37 @@ def uninstall_app(app_id):
         target_path = os.path.join(APPS_DIR, app_id)
         if os.path.exists(target_path):
             shutil.rmtree(target_path)
-            return {"status": "success", "message": "Aplikasi berhasil dihapus"}
+            return {"status": "success"}
         return {"status": "error", "message": "Aplikasi tidak ditemukan"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-# --- 4. FUNGSI SISTEM CORE ---
+# --- 4. SISTEM CORE ---
 @eel.expose
 def get_sys_info():
-    try:
-        return {
-            "cpu": f"{psutil.cpu_percent()}%",
-            "ram": f"{psutil.virtual_memory().percent}%",
-            "os": f"{platform.system()} {platform.release()}"
-        }
-    except:
-        return {"cpu": "0%", "ram": "0%", "os": "Linux"}
+    return {
+        "cpu": f"{psutil.cpu_percent()}%",
+        "ram": f"{psutil.virtual_memory().percent}%",
+        "os": f"{platform.system()} {platform.release()}"
+    }
 
 @eel.expose
 def shutdown_pc():
     print("Mematikan sistem via UI...")
+    # FIX: Bunuh Chromium sebelum shutdown agar /tmp tidak terkunci
+    os.system("pkill -f chromium")
+    time.sleep(1)
     os.system("sudo /usr/bin/systemctl poweroff")
 
 # --- 5. KONFIGURASI BROWSER ---
-WIDTH = 1366
-HEIGHT = 768
+WIDTH, HEIGHT = 1366, 768
 browser_options = [
-    '--kiosk',
-    '--start-fullscreen',
+    '--kiosk', 
+    '--start-fullscreen', 
     f'--window-size={WIDTH},{HEIGHT}',
     '--window-position=0,0',
     '--no-sandbox',
     '--disable-translate',
-    '--disable-features=Translate',
-    '--lang=id',
     '--no-first-run',
     '--no-default-browser-check',
     '--disable-infobars',
@@ -128,20 +135,22 @@ browser_options = [
 
 # --- 6. EKSEKUSI UTAMA ---
 if __name__ == '__main__':
+    # A. Bersihkan sesi lama yang mungkin masih mengunci /tmp
+    os.system("pkill -f chromium")
     profile_dir = '/tmp/siarkota_profile'
     if os.path.exists(profile_dir):
-        try:
-            subprocess.run(['rm', '-rf', profile_dir], check=False)
-        except:
-            pass
+        shutil.rmtree(profile_dir, ignore_errors=True)
 
+    # B. Jalankan Setup Symlink otomatis
+    setup_symlink()
+
+    # C. Mulai Aplikasi
     try:
-        print(f"SiarKotaOS Aktif. Menunggu UI...")
+        print(f"SiarKotaOS Aktif. Symlink: OK. Port: Otomatis.")
         eel.start(
             'index.html',
             mode='chrome',
             size=(WIDTH, HEIGHT),
-            port=0,
             cmdline_args=browser_options
         )
     except (SystemExit, KeyboardInterrupt):

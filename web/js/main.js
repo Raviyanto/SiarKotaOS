@@ -1,14 +1,28 @@
-// Update Jam Digital
-function updateClock() {
-    const now = new Date();
-    document.getElementById('clock').innerText = now.toLocaleTimeString();
-}
-setInterval(updateClock, 1000);
+// web/js/main.js
 
-// Ambil data sistem dari Python (Eel)
-async function refreshStats() {
-    let stats = await eel.get_sys_info()();
-    document.getElementById('cpu').innerText = "CPU: " + stats.cpu;
-    document.getElementById('ram').innerText = "RAM: " + stats.ram;
+// Fungsi Jam Digital yang aman
+function updateClock() {
+    const clockElement = document.getElementById('clock');
+    if (clockElement) {
+        const now = new Date();
+        clockElement.innerText = now.toLocaleTimeString('id-ID');
+    }
 }
-setInterval(refreshStats, 2000);
+
+// Fungsi Statistik yang aman
+async function refreshStats() {
+    try {
+        const stats = await eel.get_sys_info()();
+        const cpuEl = document.getElementById('cpu');
+        const ramEl = document.getElementById('ram');
+        
+        if (cpuEl) cpuEl.innerText = stats.cpu;
+        if (ramEl) ramEl.innerText = stats.ram;
+    } catch (e) {
+        console.log("Eel belum siap atau error stats.");
+    }
+}
+
+// Jalankan interval hanya jika fungsi tersedia
+setInterval(updateClock, 1000);
+setInterval(refreshStats, 3000);
