@@ -6,30 +6,62 @@ import shutil
 import subprocess
 import json
 import time
+import tkinter as tk  # Ditambahkan untuk Splash Screen
 
 # --- 1. INISIALISASI PATH ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 WEB_DIR = os.path.join(BASE_DIR, 'web')
 APPS_DIR = os.path.join(BASE_DIR, 'apps')
-# Path symlink di dalam folder web
 SYMLINK_PATH = os.path.join(WEB_DIR, 'apps')
 
-# Memastikan folder apps utama tersedia
 if not os.path.exists(APPS_DIR):
     os.makedirs(APPS_DIR)
 
+# --- FUNGSI SPLASH SCREEN (ZARATHUSTRA) ---
+def show_splash():
+    """Menampilkan jendela splash screen ala Android sebelum masuk ke GUI utama"""
+    splash = tk.Tk()
+    splash.title("SiarKotaOS Booting")
+    
+    # Buat layar penuh dan warna hitam
+    splash.attributes('-fullscreen', True)
+    splash.configure(bg='black')
+    
+    # Logo ASCII Zarathustra
+    ascii_art = """
+ ____  _             _  __     _             ____  ____ 
+/ ___|(_) __ _ _ __ | |/ /___ | |_ __ _     / __ \/ ___|
+\___ \| |/ _` | '__|| ' // _ \| __/ _` |   / / / /\___ \ 
+ ___) | | (_| | |   | . \ (_) | || (_| |  | /_/ / ___) |
+|____/|_|\__,_|_|   |_|\_\___/ \__\__,_|   \____/|____/ 
+    """
+    
+    label = tk.Label(
+        splash, 
+        text=ascii_art, 
+        fg="#00ff41", 
+        bg="black", 
+        font=("Courier", 12, "bold"),
+        justify=tk.LEFT
+    )
+    label.pack(expand=True)
+
+    # Tambahkan teks status di bawah
+    status = tk.Label(splash, text="INITIALIZING ZARATHUSTRA SYSTEM...", fg="#00ff41", bg="black", font=("Courier", 10))
+    status.pack(side=tk.BOTTOM, pady=50)
+
+    # Tutup otomatis setelah 3 detik
+    splash.after(3000, splash.destroy)
+    splash.mainloop()
+
 # --- FUNGSI OTOMATIS SYMLINK ---
 def setup_symlink():
-    """Membuat 'pintu ajaib' dari web/apps ke folder apps utama"""
     try:
-        # Jika sudah ada folder/file di web/apps tapi bukan symlink, hapus dulu
         if os.path.exists(SYMLINK_PATH) and not os.path.islink(SYMLINK_PATH):
             if os.path.isdir(SYMLINK_PATH):
                 shutil.rmtree(SYMLINK_PATH)
             else:
                 os.remove(SYMLINK_PATH)
-        
-        # Buat symlink jika belum ada
         if not os.path.exists(SYMLINK_PATH):
             os.symlink(APPS_DIR, SYMLINK_PATH)
             print("✅ Symlink berhasil dibuat: web/apps -> apps")
@@ -68,7 +100,6 @@ def get_installed_apps():
                     with open(manifest_path, 'r') as f:
                         data = json.load(f)
                         data['id'] = app_folder
-                        # Menggunakan path melalui symlink (apps/...) bukan (../apps/...)
                         data['path'] = f"apps/{app_folder}/{data['entry']}"
                         apps.append(data)
                 except:
@@ -82,8 +113,7 @@ def install_app(repo_url):
         target_path = os.path.join(APPS_DIR, app_id)
         if os.path.exists(target_path):
             return {"status": "error", "message": "Aplikasi sudah terpasang!"}
-        
-        result = subprocess.run(['git', 'clone', '--depth', '1', repo_url, target_path], 
+        result = subprocess.run(['git', 'clone', '--depth', '1', repo_url, target_path],
                                 capture_output=True, text=True)
         return {"status": "success"} if result.returncode == 0 else {"status": "error", "message": result.stderr}
     except Exception as e:
@@ -111,16 +141,12 @@ def get_sys_info():
 
 @eel.expose
 def shutdown_pc():
-    print("Mematikan sistem via UI...")
-    # FIX: Bunuh Chromium sebelum shutdown agar /tmp tidak terkunci
     os.system("pkill -f chromium")
     time.sleep(1)
     os.system("sudo /usr/bin/systemctl poweroff")
 
-# --- TAMBAHAN BARU: FUNGSI REBOOT ---
 @eel.expose
 def reboot_pc():
-    print("Memulai ulang sistem via UI...")
     os.system("pkill -f chromium")
     time.sleep(1)
     os.system("sudo /usr/bin/systemctl reboot")
@@ -128,8 +154,8 @@ def reboot_pc():
 # --- 5. KONFIGURASI BROWSER ---
 WIDTH, HEIGHT = 1366, 768
 browser_options = [
-    '--kiosk', 
-    '--start-fullscreen', 
+    '--kiosk',
+    '--start-fullscreen',
     f'--window-size={WIDTH},{HEIGHT}',
     '--window-position=0,0',
     '--no-sandbox',
@@ -143,18 +169,21 @@ browser_options = [
 
 # --- 6. EKSEKUSI UTAMA ---
 if __name__ == '__main__':
-    # A. Bersihkan sesi lama yang mungkin masih mengunci /tmp
+    # 1. Tampilkan Splash Screen Terlebih Dahulu (Seperti Android)
+    show_splash()
+
+    # 2. Bersihkan sesi lama
     os.system("pkill -f chromium")
     profile_dir = '/tmp/siarkota_profile'
     if os.path.exists(profile_dir):
         shutil.rmtree(profile_dir, ignore_errors=True)
 
-    # B. Jalankan Setup Symlink otomatis
+    # 3. Jalankan Setup Symlink
     setup_symlink()
 
-    # C. Mulai Aplikasi
+    # 4. Mulai Aplikasi Utama
     try:
-        print(f"SiarKotaOS Aktif. Symlink: OK. Port: Otomatis.")
+        print(f"SiarKotaOS Aktif. Transisi Splash Selesai.")
         eel.start(
             'index.html',
             mode='chrome',
